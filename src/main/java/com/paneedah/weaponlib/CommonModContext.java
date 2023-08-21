@@ -350,11 +350,6 @@ public class CommonModContext implements ModContext {
 	}
 
     @Override
-	public void runSyncTick(Runnable runnable) {
-		throw new UnsupportedOperationException();
-	}
-
-    @Override
 	public void registerRenderableItem(String name, Item item, Object renderer) {
         item.setRegistryName(ID, name); // temporary hack
         ForgeRegistries.ITEMS.register(item);
@@ -459,7 +454,7 @@ public class CommonModContext implements ModContext {
 	
 	@Override
 	public void setFlashExplosionSound(String sound) {
-	    this.flashExplosionSound = registerSound(sound.toLowerCase());
+	    this.flashExplosionSound = registerSound(sound);
 	}
 	
 	@Override

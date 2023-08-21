@@ -2,6 +2,8 @@ package com.paneedah.mwc;
 
 import com.paneedah.mwc.creativetab.*;
 import com.paneedah.mwc.handlers.ClientEventHandler;
+import com.paneedah.mwc.handlers.CommonEventHandler;
+import com.paneedah.mwc.handlers.DebugHandler;
 import com.paneedah.mwc.init.MWCRecipes;
 import com.paneedah.mwc.network.handlers.*;
 import com.paneedah.mwc.network.messages.*;
@@ -10,9 +12,11 @@ import com.paneedah.weaponlib.CommonModContext;
 import com.paneedah.weaponlib.ModContext;
 import com.paneedah.weaponlib.command.BalancePackCommand;
 import com.paneedah.weaponlib.command.CraftingFileCommand;
+import com.paneedah.weaponlib.command.DebugCommand;
 import com.paneedah.weaponlib.config.BalancePackManager;
 import com.paneedah.weaponlib.crafting.CraftingFileManager;
 import io.redstudioragnarok.redcore.RedCore;
+import net.minecraft.block.material.Material;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
@@ -23,6 +27,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
+import net.minecraftforge.fml.relauncher.FMLLaunchHandler;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -70,14 +75,40 @@ public final class MWC {
 
     @Mod.EventHandler
     public void init(FMLInitializationEvent initializationEvent) {
+        MinecraftForge.EVENT_BUS.register(CommonEventHandler.class);
+
         MWCRecipes.register();
         commonProxy.init(this);
 
+        if (initializationEvent.getSide().isClient()) {
+            Runtime.getRuntime().addShutdownHook(new Thread(ClientTickerController::stop));
+
+            updateDebugHandler();
+        }
+
+        // Set the sounds
+        modContext.setChangeZoomSound("OpticZoom");
+        modContext.setNightVisionOnSound("nightvision_on");
+        modContext.setNightVisionOffSound("nightvision_off");
+        modContext.setChangeFireModeSound("firerate_toggle");
+        modContext.setNoAmmoSound("dry_fire");
+        modContext.setExplosionSound("grenadeexplosion");
+        modContext.setFlashExplosionSound("flashbang");
+
+        modContext.setMaterialImpactSounds(Material.ROCK, 1.5f, "bullet_3_rock", "bullet_2_rock", "bullet_4_rock", "bullet_12_stone");
+        modContext.setMaterialImpactSounds(Material.WOOD, 1.5f, "bullet_3_rock", "bullet_2_rock", "bullet_4_rock", "bullet_12_stone", "bullet_10_snap");
+        modContext.setMaterialImpactSounds(Material.GRASS, 1.5f, "bullet_5_grass", "bullet_9_grass", "bullet_11_grass", "bullet_10_snap", "bullet_13_snap");
+        modContext.setMaterialImpactSounds(Material.GROUND, 1.5f, "bullet_5_grass", "bullet_9_grass", "bullet_11_grass", "bullet_10_snap", "bullet_13_snap");
+        modContext.setMaterialImpactSounds(Material.SAND, 1.5f, "bullet_5_grass", "bullet_9_grass", "bullet_11_grass", "bullet_10_snap", "bullet_13_snap");
+        modContext.setMaterialImpactSounds(Material.SNOW, 1.5f, "bullet_5_grass", "bullet_9_grass", "bullet_11_grass", "bullet_10_snap", "bullet_13_snap");
+        modContext.setMaterialImpactSounds(Material.IRON, 1.5f, "bullet_6_iron", "bullet_7_iron", "bullet_8_iron");
+
+        // Register channels for networking
         CHANNEL.registerMessage(new PermitMessageClientHandler((CommonModContext) modContext), PermitMessage.class, -1, Side.CLIENT);
         CHANNEL.registerMessage(new LivingEntityTrackerMessageMessageHandler(), LivingEntityTrackerMessage.class, -2, Side.CLIENT);
         CHANNEL.registerMessage(new SpawnParticleMessageHandler(modContext), SpawnParticleMessage.class, -3, Side.CLIENT);
         CHANNEL.registerMessage(new BlockHitMessageHandler(), BlockHitMessage.class, -4, Side.CLIENT);
-        CHANNEL.registerMessage(new ExplosionMessageHandler(modContext), ExplosionMessage.class, -5, Side.CLIENT);
+        CHANNEL.registerMessage(new ExplosionMessageHandler(), ExplosionMessage.class, -5, Side.CLIENT);
         CHANNEL.registerMessage(new SpreadableExposureMessageHandler(),	SpreadableExposureMessage.class, -6, Side.CLIENT);
         CHANNEL.registerMessage(new WorkbenchClientMessageHandler(), WorkbenchClientMessage.class, -7, Side.CLIENT);
         CHANNEL.registerMessage(new CraftingClientMessageHandler(), CraftingClientMessage.class, -8, Side.CLIENT);
@@ -123,5 +154,12 @@ public final class MWC {
         serverStartingEvent.registerServerCommand(new CraftingFileCommand());
         BalancePackManager.loadDirectory();
         CraftingFileManager.getInstance().loadDirectory();
+    }
+
+    public static void updateDebugHandler() {
+        if (DebugCommand.debugF3 || FMLLaunchHandler.isDeobfuscatedEnvironment())
+            MinecraftForge.EVENT_BUS.register(DebugHandler.class);
+        else
+            MinecraftForge.EVENT_BUS.unregister(DebugHandler.class);
     }
 }

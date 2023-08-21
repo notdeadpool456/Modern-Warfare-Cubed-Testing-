@@ -7,7 +7,7 @@ plugins {
     id 'com.gtnewhorizons.retrofuturagradle' version '1.+'
     id 'com.matthewprenger.cursegradle' version '1.4.0'
     id 'me.champeau.jmh' version '0.7.1'
-    id 'io.freefair.lombok' version '8.1.0'
+    id 'io.freefair.lombok' version '8.2.2'
 }
 
 // Add version to the jar name
@@ -34,7 +34,7 @@ minecraft {
 
     username = 'Desoroxxx'
 
-    extraRunJvmArguments.addAll('-Xmx4G', '-Xms4G', '-Dforge.logging.console.level=debug', '-Dmixin.hotSwap=true', '-Dmixin.checks.interfaces=true', '-Dmixin.debug.export=true', '-Dfml.coreMods.load=com.paneedag.mwc.asm.MWCPlugin')
+    extraRunJvmArguments.addAll('-Xmx4G', '-Xms4G', '-Dforge.logging.console.level=debug', '-Dmixin.hotSwap=true', '-Dmixin.checks.interfaces=true', '-Dmixin.debug.export=true', '-Dfml.coreMods.load=com.paneedah.mwc.asm.MWCPlugin')
 
     injectedTags.put('ID', project.id)
     injectedTags.put('VERSION', project.version)
@@ -73,7 +73,7 @@ dependencies {
     jmh 'org.openjdk.jmh:jmh-core:1.36'
     jmh 'org.openjdk.jmh:jmh-generator-annprocess:1.36'
 
-    final String mixin = modUtils.enableMixins('zone.rong:mixinbooter:8.3', "mixins.${project.id}.refmap.json")
+    final String mixin = modUtils.enableMixins('zone.rong:mixinbooter:8.4', "mixins.${project.id}.refmap.json")
     api (mixin) { transitive = false }
     annotationProcessor 'org.ow2.asm:asm-debug-all:5.2'
     annotationProcessor 'com.google.guava:guava:24.1.1-jre'
